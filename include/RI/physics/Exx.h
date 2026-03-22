@@ -51,6 +51,10 @@ public:
 		const std::map<TA, std::map<TAC, Tensor<Tdata>>> &Ds,
 		const Tdata_real &threshold,
 		const std::string &save_name_suffix="");
+	void set_Ds_no_post_2d(
+		const std::map<TA, std::map<TAC, Tensor<Tdata>>> &Ds,
+		const Tdata_real &threshold,
+		const std::string &save_name_suffix="");
 	void set_Ds_delta(
 		const std::map<TA, std::map<TAC, Tensor<Tdata>>> &Ds,
 		const Tdata_real &threshold,
@@ -73,6 +77,8 @@ public:
 		const std::string &save_name_suffix="");
 
 	void cal_Hs(
+		const std::array<std::string,3> &save_names_suffix={"","",""});		// "Cs","Vs","Ds"
+	void cal_Hs_only(
 		const std::array<std::string,3> &save_names_suffix={"","",""});		// "Cs","Vs","Ds"
 	void cal_force(
 		const std::array<std::string,5> &save_names_suffix={"","","","",""});	// "Cs","Vs","Ds","dCs","dVs"

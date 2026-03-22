@@ -100,6 +100,21 @@ void Exx<TA,Tcell,Ndim,Tdata>::set_Ds(
 	//if()
 		this->post_2D.saves["Ds_"+save_name_suffix] = this->post_2D.set_tensors_map2(Ds);
 }
+
+template<typename TA, typename Tcell, std::size_t Ndim, typename Tdata>
+void Exx<TA,Tcell,Ndim,Tdata>::set_Ds_no_post_2d(
+	const std::map<TA, std::map<TAC, Tensor<Tdata>>> &Ds,
+	const Tdata_real &threshold,
+	const std::string &save_name_suffix)
+{
+	this->lri.set_tensors_map2(
+		Ds,
+		{Label::ab::a1b1, Label::ab::a1b2, Label::ab::a2b1, Label::ab::a2b2},
+		{{"threshold_filter", threshold}},
+		"Ds_"+save_name_suffix );
+	this->flag_finish.Ds = true;
+	this->flag_finish.Ds_delta = false;
+}
 template<typename TA, typename Tcell, std::size_t Ndim, typename Tdata>
 void Exx<TA,Tcell,Ndim,Tdata>::free_Ds(const std::string &save_name_suffix)
 {
@@ -277,6 +292,45 @@ void Exx<TA,Tcell,Ndim,Tdata>::cal_Hs(
 		this->energy = this->post_2D.cal_energy(
 			this->post_2D.saves["Ds_"+save_names_suffix[2]],
 			this->post_2D.set_tensors_map2(this->Hs) );
+
+	if(!this->flag_save_result.Hs)
+		this->Hs.clear();
+}
+
+template<typename TA, typename Tcell, std::size_t Ndim, typename Tdata>
+void Exx<TA,Tcell,Ndim,Tdata>::cal_Hs_only(
+	const std::array<std::string,3> &save_names_suffix)						// "Cs","Vs","Ds"
+{
+	assert(this->flag_finish.stru);
+
+	assert(this->flag_finish.Cs);
+	this->lri.data_ab_name[Label::ab::a] = this->lri.data_ab_name[Label::ab::b] = "Cs_"+save_names_suffix[0];
+
+	assert(this->flag_finish.Vs);
+	this->lri.data_ab_name[Label::ab::a0b0] = "Vs_"+save_names_suffix[1];
+
+	if(!this->flag_finish.Ds_delta)
+	{
+		assert(this->flag_finish.Ds);
+		for(const Label::ab label : {Label::ab::a1b1, Label::ab::a1b2, Label::ab::a2b1, Label::ab::a2b2})
+			this->lri.data_ab_name[label] = "Ds_"+save_names_suffix[2];
+	}
+	else
+	{
+		for(const Label::ab label : {Label::ab::a1b1, Label::ab::a1b2, Label::ab::a2b1, Label::ab::a2b2})
+			this->lri.data_ab_name[label] = "Ds_delta_"+save_names_suffix[2];
+	}
+
+	if(!this->flag_finish.Ds_delta)
+		this->Hs.clear();
+	this->lri.cal_loop3(
+		{Label::ab_ab::a0b0_a1b1,
+		 Label::ab_ab::a0b0_a1b2,
+		 Label::ab_ab::a0b0_a2b1,
+		 Label::ab_ab::a0b0_a2b2},
+		this->Hs);
+
+	this->energy = Tdata{};
 
 	if(!this->flag_save_result.Hs)
 		this->Hs.clear();
