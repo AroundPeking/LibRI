@@ -12,6 +12,7 @@
 
 #include <mpi.h>
 #include <array>
+#include <cstdint>
 #include <map>
 #include <set>
 
@@ -29,6 +30,20 @@ public:
 	constexpr static std::size_t Npos = Ndim;		// tmp
 	using Tatom_pos = std::array<Tpos,Npos>;		// tmp
 
+	struct Weighted_Short_Config
+	{
+		Tdata_real weighted_short_threshold = static_cast<Tdata_real>(-1);
+		bool weighted_short_stats_only = false;
+		bool weighted_short_only = true;
+	};
+
+	struct Weighted_Short_Stats
+	{
+		std::uint64_t weighted_short_candidates = 0;
+		std::uint64_t weighted_short_skips = 0;
+		Tdata_real weighted_short_max_score = 0;
+	};
+
 	void set_parallel(
 		const MPI_Comm &mpi_comm,
 		const std::map<TA,Tatom_pos> &atoms_pos,
@@ -38,6 +53,7 @@ public:
 	void set_symmetry(
 		const bool flag_symmetry,
 		const std::map<std::pair<TA,TA>, std::set<TC>> &irreducible_sector);
+	void set_weighted_short_config(const Weighted_Short_Config &config);
 
 	void set_Cs(
 		const std::map<TA, std::map<TAC, Tensor<Tdata>>> &Cs,
@@ -48,6 +64,10 @@ public:
 		const Tdata_real &threshold,
 		const std::string &save_name_suffix="");
 	void set_Ds(
+		const std::map<TA, std::map<TAC, Tensor<Tdata>>> &Ds,
+		const Tdata_real &threshold,
+		const std::string &save_name_suffix="");
+	void set_Ds_no_post_2d(
 		const std::map<TA, std::map<TAC, Tensor<Tdata>>> &Ds,
 		const Tdata_real &threshold,
 		const std::string &save_name_suffix="");
@@ -74,6 +94,8 @@ public:
 
 	void cal_Hs(
 		const std::array<std::string,3> &save_names_suffix={"","",""});		// "Cs","Vs","Ds"
+	void cal_Hs_only(
+		const std::array<std::string,3> &save_names_suffix={"","",""});
 	void cal_force(
 		const std::array<std::string,5> &save_names_suffix={"","","","",""});	// "Cs","Vs","Ds","dCs","dVs"
 	void cal_stress(
@@ -87,6 +109,8 @@ public:
 	Tensor<Tdata> stress = Tensor<Tdata>({Npos, Npos});
 
 	Exx_Post_2D<TA,TC,Tdata> post_2D;
+	Weighted_Short_Config weighted_short_config;
+	Weighted_Short_Stats weighted_short_stats;
 
 	void free_Cs(const std::string &save_name_suffix="");
 	void free_Vs(const std::string &save_name_suffix="");

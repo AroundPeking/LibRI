@@ -6,6 +6,7 @@
 #pragma once
 
 #include "RI/physics/Exx.h"
+#include <cassert>
 #include <complex>
 
 namespace Exx_Test
@@ -22,8 +23,19 @@ namespace Exx_Test
 	
 		exx.set_Cs({}, 1E-4);
 		exx.set_Vs({}, 1E-4);
+		exx.set_Vs({}, 1E-4, "short");
 		exx.set_Ds({}, 1E-4);
-		exx.cal_Hs();
+		typename RI::Exx<int,int,1,Tdata>::Weighted_Short_Config weighted_short_config;
+		weighted_short_config.weighted_short_threshold = 1E-3;
+		weighted_short_config.weighted_short_stats_only = true;
+		exx.set_weighted_short_config(weighted_short_config);
+		assert(exx.weighted_short_config.weighted_short_threshold == weighted_short_config.weighted_short_threshold);
+		assert(exx.weighted_short_config.weighted_short_stats_only == weighted_short_config.weighted_short_stats_only);
+		assert(exx.weighted_short_config.weighted_short_only == weighted_short_config.weighted_short_only);
+		exx.cal_Hs({"","short",""});
+		const auto weighted_short_state = RI::lri_get_weighted_short_screen_config(static_cast<const void*>(&exx.lri));
+		assert(weighted_short_state.threshold < 0);
+		assert(!weighted_short_state.enabled);
 
 		exx.set_dCs({}, 1E-4);
 		exx.set_dVs({}, 1E-4);

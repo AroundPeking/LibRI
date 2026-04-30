@@ -18,6 +18,8 @@ namespace Tensor_Multiply
 	{
 		assert(Tx.shape.size()==3);
 		assert(Ty.shape.size()==3);
+		detail::require_contract_dims(Tx.shape[1] == Ty.shape[1] && Tx.shape[2] == Ty.shape[2],
+			__func__, Tx.shape, Ty.shape, "Tx[a,b] == Ty[a,b]");
 		Tensor<Tdata> Txy({Tx.shape[0], Ty.shape[0]});
 		Blas_Interface::gemm(
 			'N', 'T',
@@ -35,6 +37,8 @@ namespace Tensor_Multiply
 	{
 		assert(Tx.shape.size()==3);
 		assert(Ty.shape.size()==3);
+		detail::require_contract_dims(Tx.shape[1] == Ty.shape[0] && Tx.shape[2] == Ty.shape[1],
+			__func__, Tx.shape, Ty.shape, "Tx[a,b] == Ty[a,b]");
 		Tensor<Tdata> Txy({Tx.shape[0], Ty.shape[2]});
 		Blas_Interface::gemm(
 			'N', 'N',
@@ -52,6 +56,8 @@ namespace Tensor_Multiply
 	{
 		assert(Tx.shape.size()==3);
 		assert(Ty.shape.size()==3);
+		detail::require_contract_dims(Tx.shape[0] == Ty.shape[1] && Tx.shape[1] == Ty.shape[2],
+			__func__, Tx.shape, Ty.shape, "Tx[a,b] == Ty[a,b]");
 		Tensor<Tdata> Txy({Tx.shape[2], Ty.shape[0]});
 		Blas_Interface::gemm(
 			'T', 'T',
@@ -69,6 +75,8 @@ namespace Tensor_Multiply
 	{
 		assert(Tx.shape.size()==3);
 		assert(Ty.shape.size()==3);
+		detail::require_contract_dims(Tx.shape[0] == Ty.shape[0] && Tx.shape[1] == Ty.shape[1],
+			__func__, Tx.shape, Ty.shape, "Tx[a,b] == Ty[a,b]");
 		Tensor<Tdata> Txy({Tx.shape[2], Ty.shape[2]});
 		Blas_Interface::gemm(
 			'T', 'N',
@@ -86,6 +94,8 @@ namespace Tensor_Multiply
 	{
 		assert(Tx.shape.size()==3);
 		assert(Ty.shape.size()==3);
+		detail::require_contract_dims(Tx.shape[2] == Ty.shape[2],
+			__func__, Tx.shape, Ty.shape, "Tx[a] == Ty[a]");
 		Tensor<Tdata> Txy({Tx.shape[0], Tx.shape[1], Ty.shape[0], Ty.shape[1]});
 		Blas_Interface::gemm(
 			'N', 'T',
@@ -103,6 +113,8 @@ namespace Tensor_Multiply
 	{
 		assert(Tx.shape.size()==3);
 		assert(Ty.shape.size()==3);
+		detail::require_contract_dims(Tx.shape[2] == Ty.shape[0],
+			__func__, Tx.shape, Ty.shape, "Tx[a] == Ty[a]");
 		Tensor<Tdata> Txy({Tx.shape[0], Tx.shape[1], Ty.shape[1], Ty.shape[2]});
 		Blas_Interface::gemm(
 			'N', 'N',
@@ -120,6 +132,8 @@ namespace Tensor_Multiply
 	{
 		assert(Tx.shape.size()==3);
 		assert(Ty.shape.size()==3);
+		detail::require_contract_dims(Tx.shape[0] == Ty.shape[2],
+			__func__, Tx.shape, Ty.shape, "Tx[a] == Ty[a]");
 		Tensor<Tdata> Txy({Tx.shape[1], Tx.shape[2], Ty.shape[0], Ty.shape[1]});
 		Blas_Interface::gemm(
 			'T', 'T',
@@ -137,6 +151,8 @@ namespace Tensor_Multiply
 	{
 		assert(Tx.shape.size()==3);
 		assert(Ty.shape.size()==3);
+		detail::require_contract_dims(Tx.shape[0] == Ty.shape[0],
+			__func__, Tx.shape, Ty.shape, "Tx[a] == Ty[a]");
 		Tensor<Tdata> Txy({Tx.shape[1], Tx.shape[2], Ty.shape[1], Ty.shape[2]});
 		Blas_Interface::gemm(
 			'T', 'N',

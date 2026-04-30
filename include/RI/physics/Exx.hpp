@@ -44,6 +44,13 @@ void Exx<TA,Tcell,Ndim,Tdata>::set_symmetry(
 }
 
 template<typename TA, typename Tcell, std::size_t Ndim, typename Tdata>
+void Exx<TA,Tcell,Ndim,Tdata>::set_weighted_short_config(
+	const typename Exx<TA,Tcell,Ndim,Tdata>::Weighted_Short_Config &config)
+{
+	this->weighted_short_config = config;
+}
+
+template<typename TA, typename Tcell, std::size_t Ndim, typename Tdata>
 void Exx<TA,Tcell,Ndim,Tdata>::set_Cs(
 	const std::map<TA, std::map<TAC, Tensor<Tdata>>> &Cs,
 	const Tdata_real &threshold,
@@ -99,6 +106,14 @@ void Exx<TA,Tcell,Ndim,Tdata>::set_Ds(
 
 	//if()
 		this->post_2D.saves["Ds_"+save_name_suffix] = this->post_2D.set_tensors_map2(Ds);
+}
+template<typename TA, typename Tcell, std::size_t Ndim, typename Tdata>
+void Exx<TA,Tcell,Ndim,Tdata>::set_Ds_no_post_2d(
+	const std::map<TA, std::map<TAC, Tensor<Tdata>>> &Ds,
+	const Tdata_real &threshold,
+	const std::string &save_name_suffix)
+{
+	this->set_Ds(Ds, threshold, save_name_suffix);
 }
 template<typename TA, typename Tcell, std::size_t Ndim, typename Tdata>
 void Exx<TA,Tcell,Ndim,Tdata>::free_Ds(const std::string &save_name_suffix)
@@ -263,15 +278,47 @@ void Exx<TA,Tcell,Ndim,Tdata>::cal_Hs(
 		for(const Label::ab label : {Label::ab::a1b1, Label::ab::a1b2, Label::ab::a2b1, Label::ab::a2b2})
 			this->lri.data_ab_name[label] = "Ds_delta_"+save_names_suffix[2];
 	}
+	const bool weighted_short_use_channel
+		= (!this->weighted_short_config.weighted_short_only)
+		|| (save_names_suffix[1] == "short");
+	const bool weighted_short_enabled
+		= (this->weighted_short_config.weighted_short_threshold > static_cast<Tdata_real>(0))
+		&& weighted_short_use_channel;
+	const void *weighted_short_lri_key = static_cast<const void*>(&this->lri);
+	lri_set_weighted_short_screen_config(
+		weighted_short_lri_key,
+		{
+			static_cast<double>(this->weighted_short_config.weighted_short_threshold),
+			this->weighted_short_config.weighted_short_stats_only,
+			weighted_short_enabled
+		});
+	this->weighted_short_stats = Weighted_Short_Stats{};
 
 	if(!this->flag_finish.Ds_delta)
 		this->Hs.clear();
-	this->lri.cal_loop3(
-		{Label::ab_ab::a0b0_a1b1,
-		 Label::ab_ab::a0b0_a1b2,
-		 Label::ab_ab::a0b0_a2b1,
-		 Label::ab_ab::a0b0_a2b2},
-		this->Hs);
+	try
+	{
+		this->lri.cal_loop3(
+			{Label::ab_ab::a0b0_a1b1,
+			 Label::ab_ab::a0b0_a1b2,
+			 Label::ab_ab::a0b0_a2b1,
+			 Label::ab_ab::a0b0_a2b2},
+			this->Hs);
+	}
+	catch(...)
+	{
+		lri_set_weighted_short_screen_config(weighted_short_lri_key, {});
+		throw;
+	}
+	{
+		const LRI_Weighted_Short_Screen_Stats weighted_short_lri_stats
+			= lri_get_weighted_short_screen_stats(weighted_short_lri_key);
+		this->weighted_short_stats.weighted_short_candidates = weighted_short_lri_stats.candidates;
+		this->weighted_short_stats.weighted_short_skips = weighted_short_lri_stats.skips;
+		this->weighted_short_stats.weighted_short_max_score
+			= static_cast<Tdata_real>(weighted_short_lri_stats.max_score);
+	}
+	lri_set_weighted_short_screen_config(weighted_short_lri_key, {});
 
 	//if()
 		this->energy = this->post_2D.cal_energy(
@@ -280,6 +327,13 @@ void Exx<TA,Tcell,Ndim,Tdata>::cal_Hs(
 
 	if(!this->flag_save_result.Hs)
 		this->Hs.clear();
+}
+
+template<typename TA, typename Tcell, std::size_t Ndim, typename Tdata>
+void Exx<TA,Tcell,Ndim,Tdata>::cal_Hs_only(
+	const std::array<std::string,3> &save_names_suffix)
+{
+	this->cal_Hs(save_names_suffix);
 }
 
 template<typename TA, typename Tcell, std::size_t Ndim, typename Tdata>
